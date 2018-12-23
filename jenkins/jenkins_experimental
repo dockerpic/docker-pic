@@ -1,0 +1,48 @@
+FROM centos:7
+
+# install java and monitoring tools
+RUN yum -y update && \
+    yum -y install epel-release && \
+    yum -y install git wget iotop iftop htop  && \
+    yum -y install java-1.8.0-openjdk java-1.8.0-openjdk-devel
+
+# install jenkins
+RUN wget https://pkg.jenkins.io/redhat-stable/jenkins-2.150.1-1.1.noarch.rpm && \
+    rpm -Uvh jenkins-2.150.1-1.1.noarch.rpm
+
+# install docker-ce
+RUN yum -y install  yum-utils device-mapper-persistent-data lvm2 && \
+    yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo && \
+    yum -y install docker-ce
+
+# install Maven
+RUN cd /usr/local && \
+    wget https://www-us.apache.org/dist/maven/maven-3/3.6.0/binaries/apache-maven-3.6.0-bin.tar.gz && \
+    tar -zxvf apache-maven-3.6.0-bin.tar.gz  && \
+    mv apache-maven-3.6.0 apache-maven && \
+    rm apache-maven-3.6.0-bin.tar.gz
+
+COPY maven.sh /etc/profile.d
+RUN chmod +x /etc/profile.d/maven.sh
+
+# install Oracle Java 11
+WORKDIR /usr/local
+RUN wget --no-cookies --no-check-certificate --header "Cookie: gpw_e24=http%3A%2F%2Fwww.oracle.com%2F; \
+    oraclelicense=accept-securebackup-cookie" \
+    https://download.oracle.com/otn-pub/java/jdk/11.0.1+13/90cf5d8f270a4347a95050320eef3fb7/jdk-11.0.1_linux-x64_bin.tar.gz && \
+    tar -zxvf jdk-11.0.1_linux-x64_bin.tar.gz && \
+    rm jdk-11.0.1_linux-x64_bin.tar.gz
+
+WORKDIR /var/jenkins_home
+
+# Install all plugins
+COPY plugins.txt /var/jenkins_home/plugins.txt
+COPY install-plugins.sh /usr/local/bin
+RUN chmod +x /usr/local/bin/install-plugins.sh
+RUN /usr/local/bin/install-plugins.sh /var/jenkins_home/plugins.txt
+RUN
+
+# copy script-security disable
+COPY groovy/disable-script-security.groovy /var/jenkins_home/init.groovy.d
+
+ENTRYPOINT ["java -Dhome.user=/var/jenkins_home -Djenkins.install.runSetupWizard=false -jar /usr/lib/jenkins/jenkins.war"]
