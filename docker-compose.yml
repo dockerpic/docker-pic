@@ -24,7 +24,7 @@ services:
   volumes:
     - /var/run/docker.sock:/var/run/docker.sock
     - /usr/bin/docker:/usr/bin/docker
-    - $HOME/myjenkins:/var/jenkins_home
+    - /opt/jenkins:/var/jenkins_home
   depends_on:
     - nexus
     - sonar

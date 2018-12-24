@@ -47,24 +47,6 @@
       command:  pip install pyopenssl ndg-httpsclient pyasn1
     - name: Update urllib3
       command: pip install -U urllib3
-    - name: copy jenkins project
-      become: yes
-      become_user: centos
-      file: path=/home/centos/myjenkins state=directory
-    - name: get url
-      become: yes
-      become_user: centos
-      get_url:
-        url: "{{ url }}/jenkins.tar.gz"
-        dest: /home/centos/myjenkins/jenkins.tar.gz
-        checksum: sha256:2c6a1f3ce03030a265b486109a7bf5caefee68b5b61ef35a117b0622b60be133
-    - name: Extract archive
-      become: yes
-      become_user: centos
-      unarchive:
-        src:  /home/centos/myjenkins/jenkins.tar.gz
-        dest: /home/centos/myjenkins
-        remote_src: yes
     - name:  git clone pic repository
       become: yes
       become_user: centos
