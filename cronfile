@@ -1,0 +1,1 @@
+30 * * * * /home/centos/docker-pic/make_tarfile

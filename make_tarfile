@@ -1,0 +1,8 @@
+#! /bin/bash
+sudo rm -Rf /opt/jen
+sudo cp -r /opt/jenkins /opt/jen
+sudo rm -Rf /opt/jen/workspace /opt/jen/war /opt/jen/plugins
+cd /opt/jen
+sudo tar -czvf jenkins.tar.gz *
+sudo cp jenkins.tar.gz $HOME/docker-pic/jenkins
+chown -R centos:centos $HOME/docker-pic/jenkins/jenkins.tar.gz 
