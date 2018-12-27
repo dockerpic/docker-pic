@@ -1,5 +1,6 @@
 version: '2'
 
+
 networks:
   prodnetwork:
     driver: bridge
@@ -36,30 +37,37 @@ services:
 
  sonar:
   hostname: sonar
-  #build: ./sonar
-  image: ambientdocker/docker-sonar
+  build: ./sonar
   ports:
    - "19000:9000"
    - "5432:5432"
   networks:
     - prodnetwork
   depends_on:
-    - sonardb
+    - postgresql
+  volumes:
+    - sonarqube_data:/bitnami
   environment:
-   - SONARQUBE_JDBC_URL=jdbc:postgresql://sonardb:5432/sonar
-   - SONARQUBE_JDBC_USERNAME=sonar
-   - SONARQUBE_JDBC_PASSWORD=sonar
+   - POSTGRESQL_HOST=postgresql
+   - POSTGRESQL_ROOT_USER=postgres
+   - POSTGRESQL_CLIENT_CREATE_DATABASE_NAME=bitnami_sonarqube
+   - POSTGRESQL_CLIENT_CREATE_DATABASE_USERNAME=bn_sonarqube
+   - POSTGRESQL_CLIENT_CREATE_DATABASE_PASSWORD=bitnami1234
+   - SONARQUBE_DATABASE_NAME=bitnami_sonarqube
+   - SONARQUBE_DATABASE_USER=bn_sonarqube
+   - SONARQUBE_DATABASE_PASSWORD=bitnami1234
 
- sonardb:
-  hostname: sonardb
+
+ postgresql:
+  hostname: postgresql
   networks:
     - prodnetwork
-  image: postgres
+  image: bitnami/postgresql:10
   environment:
-   - POSTGRES_USER=sonar
-   - POSTGRES_PASSWORD=sonar
+   - POSTGRES_USER=bn_sonarqube
+   - POSTGRES_PASSWORD=bitnami1234
   volumes:
-    - /opt/postgres/data:/var/lib/postgresql/data
+    - postgresql_data:/bitnami
 
  jmeter:
   hostname: jmeter
@@ -69,3 +77,12 @@ services:
   volumes:
     - /opt/jmeter/results:/results
     - /opt/jmeter/scripts:/scripts
+
+volumes:
+  sonarqube_data:
+    driver: local
+  postgresql_data:
+    driver: local
+
+
+

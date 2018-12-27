@@ -1,49 +1,39 @@
-FROM openjdk:8
+FROM bitnami/minideb-extras:stretch-r234
+LABEL maintainer "Bitnami <containers@bitnami.com>"
 
-ENV SONAR_VERSION=7.3 \
-    SONARQUBE_HOME=/opt/sonarqube \
-    # Database configuration
-    # Defaults to using H2
-    SONARQUBE_JDBC_USERNAME=sonar \
-    SONARQUBE_JDBC_PASSWORD=sonar \
-    SONARQUBE_JDBC_URL=
+# Install required system packages and dependencies
+RUN install_packages libblkid1 libbsd0 libc6 libedit2 libffi6 libgcc1 libglib2.0-0 libicu57 liblzma5 libmount1 libncurses5 libpcre3 libselinux1 libssl1.1 libstdc++6 libtinfo5 libuuid1 libxml2 libxslt1.1 zlib1g
+RUN bitnami-pkg unpack postgresql-client-10.6.0-20 --checksum 566509fb3c817cae6bab80d678fe3ee991d04ef508cb7fae552aa4f811373da6
+RUN bitnami-pkg install java-1.8.191-21 --checksum de7e78f5dbce5a3c2343e2a40f2f335868bd547598f1df364247b4425f2f2f1a
+RUN bitnami-pkg unpack sonarqube-7.5.0-0 --checksum d4d42f42ab2da35c082ed0aeddb3acfb4d0ca015f256fb58f8b4398b009c5947
 
-# Http port
+COPY rootfs /
+ENV BITNAMI_APP_NAME="sonarqube" \
+    BITNAMI_IMAGE_VERSION="7.5.0-debian-9-r6" \
+    PATH="/opt/bitnami/postgresql/bin:/opt/bitnami/java/bin:/opt/bitnami/sonarqube/bin/linux-x86-64/:$PATH" \
+    POSTGRESQL_CLIENT_CREATE_DATABASE_NAME="" \
+    POSTGRESQL_CLIENT_CREATE_DATABASE_PASSWORD="" \
+    POSTGRESQL_CLIENT_CREATE_DATABASE_USERNAME="" \
+    POSTGRESQL_HOST="postgresql" \
+    POSTGRESQL_PORT_NUMBER="5432" \
+    POSTGRESQL_ROOT_PASSWORD="" \
+    POSTGRESQL_ROOT_USER="postgres" \
+    SMTP_HOST="" \
+    SMTP_PASSWORD="" \
+    SMTP_PORT="" \
+    SMTP_PROTOCOL="" \
+    SMTP_USER="" \
+    SONARQUBE_DATABASE_NAME="bitnami_sonarqube" \
+    SONARQUBE_DATABASE_PASSWORD="" \
+    SONARQUBE_DATABASE_USER="bn_sonarqube" \
+    SONARQUBE_ELASTICSEARCH_PORT_NUMBER="" \
+    SONARQUBE_ENABLE_DEMO_DATA="no" \
+    SONARQUBE_JAVA_OPTS="" \
+    SONARQUBE_PASSWORD="bitnami" \
+    SONARQUBE_PORT_NUMBER="" \
+    SONARQUBE_USERNAME="admin"
+
 EXPOSE 9000
 
-RUN groupadd -r sonarqube && useradd -r -g sonarqube sonarqube
-
-# grab gosu for easy step-down from root
-RUN set -x \
-    && wget -O /usr/local/bin/gosu "https://github.com/tianon/gosu/releases/download/1.10/gosu-$(dpkg --print-architecture)" \
-    && wget -O /usr/local/bin/gosu.asc "https://github.com/tianon/gosu/releases/download/1.10/gosu-$(dpkg --print-architecture).asc" \
-    && export GNUPGHOME="$(mktemp -d)" \
-    && (gpg --keyserver ha.pool.sks-keyservers.net --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4 \
-        || gpg --keyserver ipv4.pool.sks-keyservers.net --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4) \
-    && gpg --batch --verify /usr/local/bin/gosu.asc /usr/local/bin/gosu \
-    && rm -rf "$GNUPGHOME" /usr/local/bin/gosu.asc \
-    && chmod +x /usr/local/bin/gosu \
-    && gosu nobody true
-
-RUN set -x \
-    && (gpg --keyserver ha.pool.sks-keyservers.net --recv-keys F1182E81C792928921DBCAB4CFCA4A29D26468DE \
-	    || gpg --keyserver ipv4.pool.sks-keyservers.net --recv-keys F1182E81C792928921DBCAB4CFCA4A29D26468DE) \
-    && cd /opt \
-    && curl -o sonarqube.zip -fSL https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-$SONAR_VERSION.zip \
-    && curl -o sonarqube.zip.asc -fSL https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-$SONAR_VERSION.zip.asc \
-    && gpg --batch --verify sonarqube.zip.asc sonarqube.zip \
-    && unzip sonarqube.zip \
-    && mv sonarqube-$SONAR_VERSION sonarqube \
-    && chown -R sonarqube:sonarqube sonarqube \
-    && rm sonarqube.zip* \
-    && rm -rf $SONARQUBE_HOME/bin/*
-
-# Added plugin
-COPY *.jar $SONARQUBE_HOME/extensions/plugins/
-
-
-VOLUME "$SONARQUBE_HOME/data"
-
-WORKDIR $SONARQUBE_HOME
-COPY run.sh $SONARQUBE_HOME/bin/
-ENTRYPOINT ["./bin/run.sh"]
+ENTRYPOINT [ "/app-entrypoint.sh" ]
+CMD [ "nami", "start", "--foreground", "sonarqube" ]

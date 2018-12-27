@@ -39,6 +39,16 @@ RUN wget --no-cookies --no-check-certificate --header "Cookie: gpw_e24=http%3A%2
     rm jdk-11.0.1_linux-x64_bin.tar.gz
 
 
+# install Scala and sbt 
+RUN wget https://scala-lang.org/files/archive/scala-2.12.8.deb -P /tmp  && \
+    dpkg -i /tmp/scala-2.12.8.deb 
+
+RUN echo "deb https://dl.bintray.com/sbt/debian /" | sudo tee -a /etc/apt/sources.list.d/sbt.list && \
+    apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 2EE0EA64E40A89B84B2DF73499E82A75642AC823 && \
+    apt-get -y  update && \
+    apt-get -y  install sbt       
+   
+
 COPY install-plugins.sh /usr/local/bin/install-plugins.sh
 COPY jenkins-support /usr/local/bin/jenkins-support
 
