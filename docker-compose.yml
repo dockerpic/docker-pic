@@ -74,6 +74,7 @@ services:
   networks:
     - prodnetwork
   build: ./jmeter
+  command: tail -f /dev/null
   volumes:
     - /opt/jmeter/results:/results
     - /opt/jmeter/scripts:/scripts
